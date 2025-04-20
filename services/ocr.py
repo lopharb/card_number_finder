@@ -1,0 +1,169 @@
+import numpy as np
+from paddleocr import PaddleOCR
+
+# disable logging whenever we import this file
+from paddleocr.ppocr.utils.logging import get_logger
+import logging
+logger = get_logger()
+logger.setLevel(logging.ERROR)
+
+
+class OCRModel:
+    """
+    Initialize the OCR model
+
+    Args:
+        recognizer_path (str): Path to the OCR model
+        classifier_path (str | None, optional): Path to the angle classifier model. Defaults to None.
+        use_classifier (bool, optional): Whether to use the angle classifier. Defaults to False.
+    """
+
+    def __init__(self, recognizer_path: str, classifier_path: str | None = None, use_classifier: bool = False):
+        self.use_classifier = use_classifier
+        if self.use_classifier:
+            assert classifier_path is not None, "Classifier path must be provided if classifier is used"
+
+        self.ocr = PaddleOCR(use_angle_cls=use_classifier, lang="en",
+                             classifier_path=classifier_path,
+                             recognizer_path=recognizer_path)
+
+    def _are_close(self, box1: list, box2: list, x_thresh: int = 30, y_thresh: int = 20) -> bool:
+        """
+        Check if two boxes are close enough to be considered as one.
+
+        Given two boxes, determine if they are close enough to be considered as one.
+        The boxes are considered close if the x distance between the right edge of the first box
+        and the left edge of the second box is less than x_thresh, and the y distance between the
+        middle of the first box and the middle of the second box is less than y_thresh.
+
+        Args:
+            box1 (list): A list of four points representing the first box.
+            box2 (list): A list of four points representing the second box.
+            x_thresh (int, optional): The maximum x distance between the boxes. Defaults to 30.
+            y_thresh (int, optional): The maximum y distance between the boxes. Defaults to 20.
+
+        Returns:
+            bool: Whether the boxes are close enough to be considered as one.
+        """
+        x1_max = max(p[0] for p in box1)
+        x2_min = min(p[0] for p in box2)
+
+        y1_mid = sum(p[1] for p in box1) / 4
+        y2_mid = sum(p[1] for p in box2) / 4
+
+        return abs(x2_min - x1_max) < x_thresh and abs(y1_mid - y2_mid) < y_thresh
+
+    def _get_overlap_length(self, s1: str, s2: str) -> int:
+        """
+        Get the length of the overlap between two strings.
+
+        Given two strings, return the length of the overlap between the two strings.
+        The overlap is defined as the longest common suffix of the first string and the
+        longest common prefix of the second string.
+
+        Args:
+            s1 (str): The first string.
+            s2 (str): The second string.
+
+        Returns:
+            int: The length of the overlap between the two strings.
+        """
+        l = 1
+        overlap_length = 0
+        while l <= min(len(s1), len(s2)):
+            if s1[-l:] == s2[:l]:
+                overlap_length = l
+            l += 1
+        return overlap_length
+
+    def _merge_no_overlap(self, lines: list[str]) -> str:
+        """
+        Merge multiple strings into one by overlapping the longest common suffix of the current result
+        and the longest common prefix of the next string.
+
+        Args:
+            lines (list[str]): The strings to merge.
+
+        Returns:
+            str: The merged string.
+        """
+        result = lines[0]
+        for line in lines[1:]:
+            result += line[self._get_overlap_length(result, line):]
+
+        return result
+
+    def _match_detections(self, ocr_lines: list) -> list[str]:
+        """
+        Try to match the OCR results to a card number.
+
+        The function takes the OCR results and tries to merge the strings into a single card number.
+        It works by grouping the strings by their y-coordinate and then by their x-coordinate.
+        Then it tries to merge the strings in each group into a single string using the _merge_no_overlap
+        function. The merged strings are then checked to see if they are a valid card number (16 digits).
+
+        Args:
+            ocr_lines (list): The OCR results.
+
+        Returns:
+            list[str]: A list of valid card numbers found in the OCR results.
+        """
+        filtered = [(text, box) for box, (text, _score) in ocr_lines if text.isnumeric() and len(text) <= 16]
+
+        # FIXME we should sort by y and then by x
+        sorted_blocks = sorted(filtered, key=lambda x: min(p[0] for p in x[1]))
+
+        groups = []
+        current_group = []
+
+        for text, box in sorted_blocks:
+            if not current_group:
+                current_group.append((text, box))
+                continue
+            _, prev_box = current_group[-1]
+            if self._are_close(prev_box, box):
+                current_group.append((text, box))
+            else:
+                groups.append(current_group)
+                current_group = [(text, box)]
+        if current_group:
+            groups.append(current_group)
+
+        merged = []
+        for group in groups:
+            number = self._merge_no_overlap([text for text, _box in group])
+            if len(number) == 16 and number.isdigit():
+                merged.append(number)
+        return merged
+
+    def get_card_number(self, image: np.ndarray) -> dict[str, str]:
+        """
+        Perform OCR and try to extract the card number from the image.
+
+        Args:
+            image (np.ndarray): The image to perform OCR on.
+
+        Returns:
+            dict[str, str]: A dictionary containing the card number and its confidence.
+        """
+        result = self.ocr.ocr(image, cls=self.use_classifier)
+        ocr_result: dict[str, str] = {
+            "card_number": "",
+            "confidence": "",
+            "coords": ""
+        }
+        for line in result[0]:
+            coords, (text, score) = line
+            if text.isnumeric() and len(text) == 16:
+                return {
+                    "card_number": text,
+                    "confidence": score,
+                    "coords": coords
+                }
+
+        merged_numbers = self._match_detections(result[0])
+
+        if merged_numbers:
+            ocr_result["card_number"] = merged_numbers[0]
+
+        return ocr_result
