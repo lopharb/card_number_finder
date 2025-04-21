@@ -1,3 +1,4 @@
+import re
 import numpy as np
 from paddleocr import PaddleOCR
 
@@ -108,7 +109,8 @@ class OCRModel:
         Returns:
             list[str]: A list of valid card numbers found in the OCR results.
         """
-        filtered = [(text, box) for box, (text, _score) in ocr_lines if text.isnumeric() and len(text) <= 16]
+        filtered = [(re.sub(r'\s+', '', text), box)
+                    for box, (text, _score) in ocr_lines if text.isnumeric() and len(text) <= 16]
 
         # FIXME we should sort by y and then by x
         sorted_blocks = sorted(filtered, key=lambda x: min(p[0] for p in x[1]))
@@ -154,6 +156,7 @@ class OCRModel:
         }
         for line in result[0]:
             coords, (text, score) = line
+            text = re.sub(r'\s+', '', text)
             if text.isnumeric() and len(text) == 16:
                 return {
                     "card_number": text,
