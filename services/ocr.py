@@ -9,23 +9,23 @@ logger.setLevel(logging.ERROR)
 
 
 class OCRModel:
-    """
-    Initialize the OCR model
+    def __init__(self, recognizer_path: str, detector_path: str, classifier_path: str, use_angle_classifier: bool = False):
+        """
+        Initialize the OCRModel with specified model paths and angle classifier option.
 
-    Args:
-        recognizer_path (str): Path to the OCR model
-        classifier_path (str | None, optional): Path to the angle classifier model. Defaults to None.
-        use_classifier (bool, optional): Whether to use the angle classifier. Defaults to False.
-    """
+        Args:
+            recognizer_path (str): Path to the OCR recognition model. Will be downloaded automatically if not present.
+            detector_path (str): Path to the OCR detection model. Will be downloaded automatically if not present.
+            classifier_path (str): Path to the OCR angle classifier model. Will be downloaded automatically if not present.
+            use_angle_classifier (bool, optional): Whether to use the angle classifier. Defaults to False.
+        """
 
-    def __init__(self, recognizer_path: str, classifier_path: str | None = None, use_classifier: bool = False):
-        self.use_classifier = use_classifier
-        if self.use_classifier:
-            assert classifier_path is not None, "Classifier path must be provided if classifier is used"
-
-        self.ocr = PaddleOCR(use_angle_cls=use_classifier, lang="en",
-                             classifier_path=classifier_path,
-                             recognizer_path=recognizer_path)
+        self.use_classifier = use_angle_classifier
+        self.ocr = PaddleOCR(use_angle_cls=self.use_classifier,
+                             lang="en",
+                             rec_model_dir=recognizer_path,
+                             det_model_dir=detector_path,
+                             cls_model_dir=classifier_path)
 
     def _are_close(self, box1: list, box2: list, x_thresh: int = 30, y_thresh: int = 20) -> bool:
         """
