@@ -1,0 +1,13 @@
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 1
+names: ['card']
+
+roboflow:
+  workspace: test-9qnvu
+  project: credit-card-xk7ik-3nh7p
+  version: 2
+  license: MIT
+  url: https://universe.roboflow.com/test-9qnvu/credit-card-xk7ik-3nh7p/dataset/2
