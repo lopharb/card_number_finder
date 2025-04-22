@@ -154,6 +154,10 @@ class OCRModel:
             "confidence": "",
             "coords": ""
         }
+
+        if result[0] is None:
+            return ocr_result
+
         for line in result[0]:
             coords, (text, score) = line
             text = re.sub(r'\s+', '', text)
