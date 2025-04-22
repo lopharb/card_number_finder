@@ -1,4 +1,6 @@
 import re
+import cv2
+from matplotlib import pyplot as plt
 import numpy as np
 from paddleocr import PaddleOCR
 
@@ -173,7 +175,28 @@ class OCRModel:
 
         merged_numbers = self._match_detections(result[0])
 
+        # TODO refactor this
         if merged_numbers:
             ocr_result["card_number"] = merged_numbers[0]
+        else:
+            flipped_image = cv2.flip(image, -1)
+            plt.imshow(flipped_image)
+            plt.show()
+
+            result = self.ocr.ocr(flipped_image, cls=self.use_classifier)
+            if result[0] is not None:
+                for line in result[0]:
+                    coords, (text, score) = line
+                    text = re.sub(r'\s+', '', text)
+                    if text.isnumeric() and len(text) == 16:
+                        return {
+                            "card_number": text,
+                            "confidence": score,
+                            "coords": coords
+                        }
+
+                merged_numbers = self._match_detections(result[0])
+                if merged_numbers:
+                    ocr_result["card_number"] = merged_numbers[0]
 
         return ocr_result
