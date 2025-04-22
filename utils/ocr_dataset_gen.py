@@ -1,5 +1,7 @@
 import os
 import random
+import pandas as pd
+from tqdm import tqdm
 from trdg.generators import GeneratorFromStrings
 
 
@@ -16,7 +18,7 @@ def generate_credit_card_numbers(n):
 
 
 def generate_dataset(
-    output_dir="synthetic_cards",
+    output_dir,
     num_samples=1000,
     font_dir="fonts",
     image_size=640
@@ -29,24 +31,35 @@ def generate_dataset(
         count=num_samples,
         fonts=[os.path.join(font_dir, f) for f in os.listdir(font_dir) if f.endswith((".ttf", ".otf"))],
         size=image_size,
-        skewing_angle=10,
-        random_skew=False,
+        skewing_angle=30,
+        random_skew=True,
         blur=1,
         random_blur=True,
-        background_type=2,  # plain white
-        image_dir=output_dir,
+        background_type=0,
         output_mask=False
     )
 
+    labels = {
+        'filename': [],
+        'label': []
+    }
+
     print(f"Generating {num_samples} samples...")
-    for _ in range(num_samples):
-        generator.__next__()
+    for idx, (image, label) in tqdm(enumerate(generator)):
+        filename = f"{idx}.png"
+        image.save(os.path.join(output_dir, f"{idx}.png"))
+        labels['filename'].append(filename)
+        labels['label'].append(label)
+
+    df = pd.DataFrame(labels)
+    df.to_csv(os.path.join(output_dir, "../labels.csv"), index=False, sep='\t')
     print(f"Dataset saved to '{output_dir}'")
 
 
 if __name__ == "__main__":
     generate_dataset(
-        output_dir="synthetic_cards",
+        output_dir="data/synthetic_numbers/images",
         font_dir="data/fonts",
-        image_size=640
+        image_size=640,
+        num_samples=10
     )
