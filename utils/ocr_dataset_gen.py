@@ -46,8 +46,8 @@ def generate_dataset(
 
     print(f"Generating {num_samples} samples...")
     for idx, (image, label) in tqdm(enumerate(generator)):
-        filename = f"{idx}.png"
-        image.save(os.path.join(output_dir, f"{idx}.png"))
+        filename = f"{idx:05}.png"
+        image.save(os.path.join(output_dir, filename))
         labels['filename'].append(filename)
         labels['label'].append(label)
 
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     generate_dataset(
         output_dir="data/synthetic_numbers/images",
         font_dir="data/fonts",
-        image_size=640,
-        num_samples=10
+        image_size=320,
+        num_samples=5000
     )
