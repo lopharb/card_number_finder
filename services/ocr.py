@@ -141,9 +141,37 @@ class OCRModel:
             number = self._merge_no_overlap([text for text, _box in group])
             if len(number) == 16 and number.isdigit():
                 merged.append(number)
-        return merged
+        return merged\
 
-    def get_card_number(self, image: np.ndarray) -> dict[str, str]:
+
+    def _try_get_card_number(self, image: np.ndarray) -> str:
+        """
+        Tries to extract a card number from the given image by performing OCR with the model.
+
+        Args:
+            image (np.ndarray): The image to perform OCR on.
+
+        Returns:
+            str: The extracted card number or an empty string if none is found.
+        """
+        result = self.ocr.ocr(image, cls=self.use_classifier)
+
+        if result[0] is None:
+            return ''
+
+        for line in result[0]:
+            _, (text, _) = line
+            text = re.sub(r'\s+', '', text)
+            if text.isnumeric() and len(text) == 16:
+                return text
+
+        merged_numbers = self._match_detections(result[0])
+        if merged_numbers:
+            return merged_numbers[0]
+
+        return ''
+
+    def get_card_number(self, image: np.ndarray) -> str:
         """
         Perform OCR and try to extract the card number from the image.
 
@@ -153,50 +181,10 @@ class OCRModel:
         Returns:
             dict[str, str]: A dictionary containing the card number and its confidence.
         """
-        result = self.ocr.ocr(image, cls=self.use_classifier)
-        ocr_result: dict[str, str] = {
-            "card_number": "",
-            "confidence": "",
-            "coords": ""
-        }
+        card_number = self._try_get_card_number(image)
+        if card_number != '':
+            return card_number
 
-        if result[0] is None:
-            return ocr_result
-
-        for line in result[0]:
-            coords, (text, score) = line
-            text = re.sub(r'\s+', '', text)
-            if text.isnumeric() and len(text) == 16:
-                return {
-                    "card_number": text,
-                    "confidence": score,
-                    "coords": coords
-                }
-
-        merged_numbers = self._match_detections(result[0])
-
-        # TODO refactor this
-        if merged_numbers:
-            ocr_result["card_number"] = merged_numbers[0]
-        else:
-            flipped_image = cv2.flip(image, -1)
-            plt.imshow(flipped_image)
-            plt.show()
-
-            result = self.ocr.ocr(flipped_image, cls=self.use_classifier)
-            if result[0] is not None:
-                for line in result[0]:
-                    coords, (text, score) = line
-                    text = re.sub(r'\s+', '', text)
-                    if text.isnumeric() and len(text) == 16:
-                        return {
-                            "card_number": text,
-                            "confidence": score,
-                            "coords": coords
-                        }
-
-                merged_numbers = self._match_detections(result[0])
-                if merged_numbers:
-                    ocr_result["card_number"] = merged_numbers[0]
-
-        return ocr_result
+        # handle an upside down card
+        flipped_image = cv2.flip(image, -1)
+        return self._try_get_card_number(flipped_image)

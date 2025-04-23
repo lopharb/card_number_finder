@@ -35,7 +35,7 @@ async def get_card_number(file: UploadFile = File(...)):
 
         for card_img in card_images:
             number = ocr.get_card_number(card_img)
-            numbers.append(number['card_number'])
+            numbers.append(number)
 
         return {"card_numbers": numbers}
 
