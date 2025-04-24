@@ -20,6 +20,7 @@ databricks-sdk==0.50.0
 debugpy==1.8.14
 decorator==5.2.1
 Deprecated==1.2.18
+diffimg==0.2.3
 docker==7.1.0
 executing==2.2.0
 fastapi==0.115.12
@@ -34,7 +35,7 @@ google-auth==2.39.0
 graphene==3.4.3
 graphql-core==3.2.6
 graphql-relay==3.2.0
-greenlet==3.2.0
+greenlet==3.2.1
 gunicorn==23.0.0
 h11==0.14.0
 httpcore==1.0.8
@@ -108,9 +109,9 @@ pydantic==2.11.3
 pydantic_core==2.33.1
 Pygments==2.19.1
 pyparsing==3.2.3
-pytesseract==0.3.13
 python-dateutil==2.9.0.post0
 python-docx==1.1.2
+python-multipart==0.0.20
 pytz==2025.2
 PyYAML==6.0.2
 pyzmq==26.4.0
@@ -142,11 +143,12 @@ torchvision==0.21.0
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
+trdg==1.6.0
 triton==3.2.0
 typing-inspection==0.4.0
 typing_extensions==4.13.2
 tzdata==2025.2
-ultralytics==8.3.111
+ultralytics==8.3.113
 ultralytics-thop==2.0.14
 urllib3==2.4.0
 uvicorn==0.34.2
