@@ -39,8 +39,8 @@ jobs:
       
       - name: Run container to test it
         run: |
-          docker run -d --name card_test -p 8000:8000 lopharb/card_number_finder:latest
-          sleep 30
+          docker run -d --name card_test -p 8000:8000 ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+          sleep 10
           docker ps -a
           docker logs card_test || true
           docker stop card_test
