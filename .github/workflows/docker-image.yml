@@ -35,7 +35,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.tag }} .
+          docker build -t ${{ github.repository }} .
 
       - name: Push Docker image
         run: |

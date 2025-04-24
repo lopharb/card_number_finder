@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+data/
+notebooks/
+runs/
+mlruns/
+training/
+.gitignore
+README.md
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.md
+.env
+.vscode/
+.git/
