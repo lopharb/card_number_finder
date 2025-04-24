@@ -34,7 +34,7 @@ def train(model_path: str, data_path: str, augmentations: dict, **kwargs):
 
 if __name__ == "__main__":
     train(
-        model_path='weights/yolo/yolov8m-seg-pretrained.pt',
+        model_path='app/weights/yolo/yolov8m-seg-pretrained.pt',
         data_path='data/credit_card_no_augment_instance_seg/data.yaml',
         augmentations=AUGMENTATIONS,
         epochs=50,

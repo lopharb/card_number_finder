@@ -1,17 +1,12 @@
 import re
 import cv2
-from matplotlib import pyplot as plt
 import numpy as np
 from paddleocr import PaddleOCR
 
-
-# TODO: fix logging disabling (xd)
-
-# disable logging whenever we import this file
-# from paddleocr.ppocr.utils.logging import get_logger
-# import logging
-# logger = get_logger()
-# logger.setLevel(logging.ERROR)
+import logging
+from paddleocr.ppocr.utils.logging import get_logger
+logger = get_logger()
+logger.setLevel(logging.ERROR)
 
 
 class OCRModel:
