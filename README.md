@@ -1,5 +1,21 @@
 # Card Number Finder
 
+This project is a tool for finding the card number on a bank card photo.
+
+## Usage
+#### Running locally
+###### 1. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+To run the API locally, run the following command:
+```bash
+python main.py
+```
+The API documentation will be avaliable at `http://localhost:8000/docs`.
+To detect card numbers in an image, send a POST request to `http://localhost:8000/get_card_number` with the image file as the request body.
+
 ## Flow Description
 The system uses a multi-step approach that includes:
 - Image Preprocessing (detecting the card and aligning it with the image edges)
