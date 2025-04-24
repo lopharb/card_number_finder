@@ -28,7 +28,7 @@ jobs:
       - name: Set image name and tag
         id: vars
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}  # Format: ghcr.io/owner/repo
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/${{ github.repository }}  # Format: ghcr.io/owner/repo
           TAG=${GITHUB_REF#refs/tags/}
           echo "image=$IMAGE_NAME" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
@@ -36,7 +36,16 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ github.repository }} .
+      
+      - name: Run container to test it
+        run: |
+          docker run -d --name card_test -p 8000:8000 lopharb/card_number_finder:latest
+          sleep 5
+          docker ps -a
+          docker logs card_test || true
+          docker stop card_test
+          docker rm card_test
 
       - name: Push Docker image
         run: |
-          docker push ${{ github.repository }}
+          docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}
