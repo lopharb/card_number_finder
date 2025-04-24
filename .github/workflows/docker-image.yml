@@ -39,4 +39,4 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.tag }}
+          docker push ${{ github.repository }}
