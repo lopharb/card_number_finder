@@ -5,7 +5,7 @@ import numpy as np
 from .models import detector, ocr
 from .schemas.card_number import CardNumberResponse
 from .schemas.healthcheck import HealthCheckResponse
-from .logger import get_logger
+from .utils.logger import get_logger
 
 
 card_router = APIRouter(prefix='/api/v1')

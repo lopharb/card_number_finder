@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from app.api.endpoints import card_router
 from fastapi import FastAPI
 import uvicorn
-from app.api.logger import get_logger
+from app.api.utils.logger import get_logger
 
 logger = get_logger()
 
