@@ -35,12 +35,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ github.repository }} .
+          docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.repository }} .
       
       - name: Run container to test it
         run: |
           docker run -d --name card_test -p 8000:8000 lopharb/card_number_finder:latest
-          sleep 5
+          sleep 30
           docker ps -a
           docker logs card_test || true
           docker stop card_test
