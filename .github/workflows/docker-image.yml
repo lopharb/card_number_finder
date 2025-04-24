@@ -1,0 +1,42 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'release*'  # Only runs if tag starts with "release"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name and tag
+        id: vars
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository }}  # Format: ghcr.io/owner/repo
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "image=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.tag }} .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.tag }}
